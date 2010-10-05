@@ -5,6 +5,7 @@
 #define UPDATEFREQ 1
 #define READFREQ 100
 #define RESETDELAY 0
+#define TOLERANCE 10
 
 
 int clockPin = 2;
@@ -13,6 +14,7 @@ int dataPin = 4;
 int displayPins[DISPLAYS] = {6,5};
 int potPin = 0;
 int tempPin = 1;
+int relayPin = 7;
 
 int numberSegments[][9] = 
 {
@@ -28,27 +30,23 @@ int numberSegments[][9] =
   {HIGH,HIGH,HIGH,HIGH,LOW,HIGH,HIGH,LOW},
 };
 
-// The setup() method runs once, when the sketch starts
-
 void setup()   {       
 
   Serial.begin(9600);  
-  // initialize the digital pin as an output:
   pinMode(clockPin, OUTPUT);     
   pinMode(resetPin, OUTPUT);     
   pinMode(dataPin, OUTPUT);
+  pinMode(relayPin, OUTPUT);
   
   setDisplayMode();
   disableAllDisplays();
  
  digitalWrite(clockPin, LOW);
  digitalWrite(dataPin, LOW);
+ digitalWrite(relayPin, LOW);
  
  resetShiftRegister();
 }
-
-// the loop() method runs over and over again,
-// as long as the Arduino has power
 
 void loop()                     
 {
@@ -56,6 +54,7 @@ void loop()
   int tempVal = analogRead(tempPin);
   Serial.println(potVal);
   Serial.println(tempVal);
+  setRelay(potVal, tempVal);
   int i = potVal / 100;
     displayNumber(i,READFREQ);
   //resetShiftRegister();
@@ -125,6 +124,14 @@ void setDisplayMode(){
   for(int i=0;i<DISPLAYS;i++){
     pinMode(displayPins[i], OUTPUT);    
   }
+}
+
+void setRelay(int potVal, int tempVal){
+  if((potVal + TOLERANCE) > tempVal)
+    digitalWrite(relayPin, LOW);
+  
+  if((tempVal - TOLERANCE) > potVal)
+    digitalWrite(relayPin, HIGH);
 }
 
 
